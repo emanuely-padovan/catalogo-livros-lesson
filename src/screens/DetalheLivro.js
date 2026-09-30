@@ -16,7 +16,16 @@ export default function DetalheLivro({ route }) {
   const [feedback, setFeedback] = useState(null);
 
   const carregar = useCallback(async () => {
-    // TODO: chamar buscarLivroPorId(livroId) e atualizar os estados livro, carregando e erro
+    setCarregando(true);
+    setErro(null);
+    try {
+      const dados = await buscarLivroPorId(livroId);
+      setLivro(dados)
+    } catch (erro) {
+      setErro(erro.message)
+    } finally{
+      setCarregando(false)
+    }
   }, [livroId]);
 
   useEffect(() => {
@@ -24,7 +33,24 @@ export default function DetalheLivro({ route }) {
   }, [carregar]);
 
   async function handleAdicionarFavorito() {
-    // TODO: chamar adicionarFavorito(livro.id, '') e tratar os estados adicionando, jaFavoritado e feedback
+    setAdicionando(true);
+    setFeedback(null);
+
+    try {
+      await adicionarFavorito(livro.id, "");
+      setJaFavoritado(true);
+      setFeedback({tipo: "sucesso", texto: "Adicionando aos favoritos!"});
+    } catch (erro) {
+      if (erro.status == 409) {
+        setJaFavoritado(true);
+        setFeedback({tipo: "sucesso", texto: "Este livro já está entre os seus favoritos!"})
+      } else {
+        setFeedback({tipo: "falha", texto: "Erro ao adicionar, tente novamente!"})
+      }
+    } finally {
+      setAdicionando(false);
+      setTimeout(() => setFeedback(null), 3000);
+    }
   }
 
   if (carregando) {
